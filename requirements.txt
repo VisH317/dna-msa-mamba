@@ -1,0 +1,4 @@
+torch==2.4.0
+biopython
+mamba-ssm
+causal-conv1d
