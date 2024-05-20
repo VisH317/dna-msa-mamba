@@ -42,7 +42,7 @@ def train(train_config: TrainConfig, model_config: MSAMambaConfig):
 
     print("Creating model & data...")
     model = MSAMambaForMLM(model_config).to(device=device)
-    wandb.watch(model)
+    wandb.watch(model, log="all")
 
     pytorch_total_params = sum(p.numel() for p in model.parameters())
     print("param count: ", pytorch_total_params)
