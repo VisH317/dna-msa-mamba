@@ -26,7 +26,6 @@ class MSAMambaBlock(nn.Module):
         b, m, l, d = x.size()
 
         x_mamba = x.flatten(0, 1)
-        print(x_mamba.size())
         out_mamba = self.mamba(x_mamba)[0].reshape(b, m, l, d)
         out = self.norm1(out_mamba, x)
         out = self.norm2(self.att(out), out)

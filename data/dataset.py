@@ -19,10 +19,8 @@ class MSAGenomeCore(Dataset):
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 def collate(data: list[tuple[list, list]]) -> tuple[Tensor, Tensor]:
-    print("collating")
     x = torch.stack([torch.as_tensor(d[0], device=device) for d in data], dim=0)
     target = torch.stack([torch.as_tensor(d[1], device=device) for d in data], dim=0)
-    print("collated")
     return x, target
 
 class MSAGenome:

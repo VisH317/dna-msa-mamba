@@ -50,8 +50,9 @@ def train(train_config: TrainConfig, model_config: MSAMambaConfig):
     dataset = MSAGenome(train_config.datapath, train_config.batch_size, train_config.val_batch_size)
     
     criterion = nn.CrossEntropyLoss(reduction="mean", ignore_index=-100)
-    opt = optim.AdamW(model.parameters(), lr=train_config.lr, betas=(0.9, 0.95), weight_decay=train_config.weight_decay)
+    opt = optim.AdamW(model.parameters(), lr=train_config.lr, betas=(0.9, 0.99), weight_decay=train_config.weight_decay)
     scheduler = optim.lr_scheduler.ExponentialLR(opt, gamma=0.9)
+    cosine = optim.lr_scheduler.CosineAnnealingWarmRestarts(opt, eta_min=0.15, T_0 = 10)
     # no scheduler yet but will add later
 
     # data storage
@@ -59,12 +60,14 @@ def train(train_config: TrainConfig, model_config: MSAMambaConfig):
     val_losses = []
     accuracies = []
 
+    MAX_EPOCH_LEN = 6000
+
     for epoch in range(train_config.n_epochs):
         train_loader, val_loader = dataset.get_dataloaders()
-        val_loader_iter = iter(val_loader)
+        # val_loader_iter = iter(val_loader)
 
         opt.zero_grad()
-        for ix, data in (bar := tqdm(enumerate(train_loader), desc=f"Epoch: {epoch+1}, Loss: N/A, Val: N/A", total=len(dataset)//train_config.batch_size)):
+        for ix, data in (bar := tqdm(enumerate(train_loader), desc=f"Epoch: {epoch+1}, Loss: N/A, Val: N/A", total=min(MAX_EPOCH_LEN, len(dataset)//train_config.batch_size))):
             input, target = data
             y = model(input)[:, 0]
             
@@ -80,8 +83,11 @@ def train(train_config: TrainConfig, model_config: MSAMambaConfig):
                 if train_config.grad_clip is not None: nn.utils.clip_grad_norm_(model.parameters(), train_config.grad_clip)
                 opt.step()
                 opt.zero_grad()
+                cosine.step()
             
             bar.set_description(f"Epoch: {epoch+1}, Loss: {losses[-1]}")
+
+            if ix >= MAX_EPOCH_LEN: break
 
         scheduler.step()
 
