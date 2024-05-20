@@ -93,8 +93,11 @@ def train(train_config: TrainConfig, model_config: MSAMambaConfig):
         scheduler.step()
 
     torch.save(model.state_dict(), "model.pt")
-    with open("losses.pkl", "rb") as f:
+    with open("losses.pkl", "wb") as f:
         pickle.dump(losses, f)
+    
+    wandb.save("model.pt")
+    wandb.save("losses.pkl")
 
             # if ix % train_config.val_step == 0:
             #     with torch.no_grad():
