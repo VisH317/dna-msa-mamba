@@ -16,7 +16,7 @@ class ColumnAttention(nn.Module):
         self.qkv = nn.Linear(d_model, 3 * self.d_attn * n_heads, bias=False)
         self.o = nn.Linear(self.d_attn * self.n_heads, d_model)
 
-        nn.init.normal_(self.qkv, mean=0, std=np.sqrt(2 / (self.d_model + self.d_attn)))
+        nn.init.normal_(self.qkv.weight, mean=0, std=np.sqrt(2 / (self.d_model + self.d_attn)))
     
     # x: B x M x L x D
     def forward(self, x: Tensor) -> Tensor:
@@ -30,6 +30,7 @@ class ColumnAttention(nn.Module):
         att = F.scaled_dot_product_attention(Q, K, V, dropout_p=self.dropout_p)
         att = att.view(b, m, l, self.d_attn * self.n_heads)
         return self.o(att)
+
 
 class MLP(nn.Module):
     def __init__(self, d_model: int, d_mem: int = -1, act = "silu") -> None:
