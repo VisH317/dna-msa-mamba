@@ -47,20 +47,21 @@ def train(train_config: TrainConfig, model_config: MSAMambaConfig):
     pytorch_total_params = sum(p.numel() for p in model.parameters())
     print("param count: ", pytorch_total_params)
 
+    MAX_EPOCH_LEN = 7500
+
     dataset = MSAGenome(train_config.datapath, train_config.batch_size, train_config.val_batch_size)
     
     criterion = nn.CrossEntropyLoss(reduction="mean", ignore_index=-100)
     opt = optim.AdamW(model.parameters(), lr=train_config.lr, betas=(0.9, 0.99), weight_decay=train_config.weight_decay)
     scheduler = optim.lr_scheduler.ExponentialLR(opt, gamma=0.9)
-    cosine = optim.lr_scheduler.CosineAnnealingWarmRestarts(opt, eta_min=0.15, T_0 = 10)
+    # cosine = optim.lr_scheduler.CosineAnnealingWarmRestarts(opt, eta_min=0.15, T_0 = 10)
+    warmup = optim.lr_scheduler.LinearLR(opt, start_factor=0.25, total_iters=MAX_EPOCH_LEN)
     # no scheduler yet but will add later
 
     # data storage
     losses = []
     val_losses = []
     accuracies = []
-
-    MAX_EPOCH_LEN = 6000
 
     for epoch in range(train_config.n_epochs):
         train_loader, val_loader = dataset.get_dataloaders()
@@ -83,7 +84,7 @@ def train(train_config: TrainConfig, model_config: MSAMambaConfig):
                 if train_config.grad_clip is not None: nn.utils.clip_grad_norm_(model.parameters(), train_config.grad_clip)
                 opt.step()
                 opt.zero_grad()
-                cosine.step()
+                warmup.step()
             
             bar.set_description(f"Epoch: {epoch+1}, Loss: {losses[-1]}")
 

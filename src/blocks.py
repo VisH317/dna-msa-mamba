@@ -2,6 +2,7 @@ import torch
 from torch import nn, Tensor
 import torch.nn.functional as F
 from src.utils import RMSNorm
+import numpy as np
 
 class ColumnAttention(nn.Module):
     def __init__(self, d_model: int, n_heads: int = 4, d_attn: int = -1, dropout_p: float = 0) -> None:
@@ -14,6 +15,8 @@ class ColumnAttention(nn.Module):
 
         self.qkv = nn.Linear(d_model, 3 * self.d_attn * n_heads, bias=False)
         self.o = nn.Linear(self.d_attn * self.n_heads, d_model)
+
+        nn.init.normal_(self.qkv, mean=0, std=np.sqrt(2 / (self.d_model + self.d_attn)))
     
     # x: B x M x L x D
     def forward(self, x: Tensor) -> Tensor:
