@@ -54,7 +54,7 @@ def train(train_config: TrainConfig, model_config: MSAMambaConfig):
     criterion = nn.CrossEntropyLoss(reduction="mean", ignore_index=-100)
     opt = optim.AdamW(model.parameters(), lr=train_config.lr, betas=(0.9, 0.99), weight_decay=train_config.weight_decay)
     scheduler = optim.lr_scheduler.ExponentialLR(opt, gamma=0.9)
-    cosine = optim.lr_scheduler.CosineAnnealingLR(opt, T_max=(4*MAX_EPOCH_LEN)//train_config.grad_accum_iter, eta_min=0.15)
+    # cosine = optim.lr_scheduler.CosineAnnealingLR(opt, T_max=(4*MAX_EPOCH_LEN)//train_config.grad_accum_iter, eta_min=0.15) # cosine screws stuff up badly
     warmup = optim.lr_scheduler.LinearLR(opt, start_factor=0.25, total_iters=MAX_EPOCH_LEN//train_config.grad_accum_iter)
     # no scheduler yet but will add later
 
@@ -85,7 +85,7 @@ def train(train_config: TrainConfig, model_config: MSAMambaConfig):
                 opt.step()
                 opt.zero_grad()
                 warmup.step()
-                cosine.step()
+                # cosine.step()
             
             bar.set_description(f"Epoch: {epoch+1}, Loss: {losses[-1]}")
 
