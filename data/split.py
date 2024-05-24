@@ -1,6 +1,6 @@
 import torch
 import pickle
-from torch import Tensor
+import numpy as np
 from tqdm import tqdm
 
 SEQLEN = 1024
@@ -14,7 +14,7 @@ def process(data: str):
 
     for ix, msa in tqdm(enumerate(msas), desc="parsing"):
         x, target = msa
-        x = torch.as_tensor(x)
+        x = np.asarray(x)
         proc.append(tuple([x[:, :512].tolist(), target[:512]]))
         proc.append(tuple([x[:, 512:].tolist(), target[512:]]))
     
