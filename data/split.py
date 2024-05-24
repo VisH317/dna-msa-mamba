@@ -14,7 +14,7 @@ def process(data: str):
 
     for ix, msa in tqdm(enumerate(msas), desc="parsing"):
         x, target = msa
-        x = np.asarray(x)
+        x = np.asarray(x, dtype=np.uint8)
         proc.append(tuple([x[:, :512].tolist(), target[:512]]))
         proc.append(tuple([x[:, 512:].tolist(), target[512:]]))
     
