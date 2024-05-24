@@ -14,8 +14,9 @@ def process(data: str):
 
     for ix, msa in tqdm(enumerate(msas), desc="parsing"):
         x, target = msa
-        proc.append(tuple([x[:][:512], target[:512]]))
-        proc.append(tuple([x[:][512:], target[512:]]))
+        x = torch.as_tensor(x)
+        proc.append(tuple([x[:, :512].tolist(), target[:512]]))
+        proc.append(tuple([x[:, 512:].tolist(), target[512:]]))
     
     print("Storing data...")
     with open("msa_seq1k_split_30k.pkl", "wb") as f:
