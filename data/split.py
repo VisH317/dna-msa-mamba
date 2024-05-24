@@ -1,6 +1,6 @@
 import torch
 import pickle
-import numpy as np
+# import numpy as np
 from tqdm import tqdm
 
 SEQLEN = 1024
@@ -14,9 +14,9 @@ def process(data: str):
 
     for ix, msa in tqdm(enumerate(msas), desc="parsing"):
         x, target = msa
-        x = np.asarray(x, dtype=np.uint8)
-        proc.append(tuple([x[:, :512].tolist(), target[:512]]))
-        proc.append(tuple([x[:, 512:].tolist(), target[512:]]))
+
+        proc.append([[i[:512] for i in x], target[:512]])
+        proc.append([[i[512:] for i in x], target[512:]])
         x = None
     
     print("Storing data...")
