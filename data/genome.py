@@ -14,16 +14,15 @@ def get_stuff():
 
     with open("msa_seq1k_24k_17999_ckpt.pkl", "rb") as f:
         MSAs = pickle.load(f)
+        print("loaded from ckpt")
 
     with open("msa_seq1k_omim.csv", "r", newline="") as f:
         reader = csv.reader(f)
         for ix, row in tqdm(enumerate(reader), desc="getting MSAs", total=1500*24):
             if ix == 0: continue
+            if ix <= 17999: continue
             m = msa.get_msa(row[0], int(row[1]), int(row[2]), strand="+", tokenize=True)
             MSAs.append((m, int(row[3])))
-            if (ix+1) % 1000 == 0:
-                with open(f"msa_seq1k_24k_{ix}_ckpt.pkl", "wb") as f:
-                    pickle.dump(MSAs, f)
 
     with open("msa_seq1k_30k_omim.pkl", "wb") as f:
         pickle.dump(MSAs, f)

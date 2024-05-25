@@ -66,7 +66,7 @@ def finetune(model_path: str, model_config: MSAMambaClassificationConfig, tune_c
         ival_loader = iter(val_loader)
 
         opt.zero_grad()
-        for ix, data in tqdm(enumerate(train_loader), desc=f"Epoch {epoch+1}", total=max(tune_config.max_steps, dataset.train_steps)):
+        for ix, data in tqdm(enumerate(train_loader), desc=f"Epoch {epoch+1}", total=min(tune_config.max_steps, dataset.train_steps)):
             x, target = data
             print(x.size(), target.size(), x.dtype)
 
@@ -79,10 +79,13 @@ def finetune(model_path: str, model_config: MSAMambaClassificationConfig, tune_c
             losses.append(loss.item())
             accs.append(accuracy.item())
 
+
             if (ix+1)%tune_config.grad_accum_steps == 0:
                 opt.step()
                 scheduler.step()
                 opt.zero_grad()
+            
+            if ix >= tune_config.max_steps: break
             
             # validation
             if ix % 32 == 0:
