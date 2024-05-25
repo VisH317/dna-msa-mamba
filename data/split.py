@@ -16,8 +16,8 @@ def process(data: str):
     for ix in tqdm(range(ogl), desc="parsing"):
         x, target = msas[ix]
 
-        msas.append(([i[512:] for i in x], target[512:]))
-        msas[ix] = ([i[:512] for i in x], target[:512])
+        msas.append(([i[512:] for i in x], target))
+        msas[ix] = ([i[:512] for i in x], target)
 
         # proc.append([[i[:512] for i in x], target[:512]])
         # proc.append([[i[512:] for i in x], target[512:]])
