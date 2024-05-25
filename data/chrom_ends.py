@@ -29,17 +29,17 @@ CHROM_LEN = {
     "Y": 57227415
 }
 
-TOTAL_PER_CHROM = 1280
+TOTAL_PER_CHROM = 1500
 
 VOCAB_SIZE = 6
 
 if __name__ == "__main__":
-    with open("genome.csv", "w", newline="") as f:
+    with open("genome_512.csv", "w", newline="") as f:
         writer = csv.writer(f)
         writer.writerow(["chrom", "start", "end"])
         for c,l in tqdm(CHROM_LEN.items(), desc="chrom"):
-            rand = torch.randint(0, l-1024, [TOTAL_PER_CHROM])
+            rand = torch.randint(0, l-512, [TOTAL_PER_CHROM])
             for i in trange(TOTAL_PER_CHROM):
-                writer.writerow([c, rand[i].item(), rand[i].item() + 1024])
+                writer.writerow([c, rand[i].item(), rand[i].item() + 512])
 
     print("done")
