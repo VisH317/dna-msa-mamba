@@ -1,5 +1,3 @@
-from Bio import SeqIO
-from Bio.Seq import Seq
 from gpn.data import GenomeMSA
 from tqdm import tqdm
 import csv
@@ -16,17 +14,17 @@ def get_stuff():
 
     MSAs = []
 
-    with open("data/genome_512.csv", "r", newline="") as f:
+    with open("msa_seq1k_clinvar.csv", "r", newline="") as f:
         reader = csv.reader(f)
         for ix, row in tqdm(enumerate(reader), desc="getting MSAs", total=1500*24):
             if ix == 0: continue
             m = msa.get_msa(row[0], int(row[1]), int(row[2]), strand="+", tokenize=True)
-            MSAs.append(m)
-            if (ix+1) % 10000 == 0:
+            MSAs.append((m, int(row[3])))
+            if (ix+1) % 1000 == 0:
                 with open(f"msa_seq1k_24k_{ix}_ckpt.pkl", "wb") as f:
                     pickle.dump(MSAs, f)
 
-    with open("msa_seq512_30k.pkl", "wb") as f:
+    with open("msa_seq1k_30k_clinvar.pkl", "wb") as f:
         pickle.dump(MSAs, f)
 
 
@@ -53,3 +51,6 @@ def get_data(csv_file: str):
 
     with open(f"{csv_file}.pkl", "wb") as f:
         pickle.dump(MSAs, f)
+
+if __name__ == "__main__":
+    get_stuff()
