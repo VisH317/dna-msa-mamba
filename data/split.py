@@ -24,7 +24,7 @@ def process(data: str):
         # x = None
     
     print("Storing data...")
-    with open("msa_seq1k_split_30k.pkl", "wb") as f:
+    with open("msa_seq1k_split_30k_clinvar.pkl", "wb") as f:
         pickle.dump(msas, f)
     
 
