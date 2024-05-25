@@ -10,18 +10,18 @@ def process(data: str):
     with open(data, "rb") as f:
         msas = pickle.load(f)
 
-    proc = []
-
     for ix, msa in tqdm(enumerate(msas), desc="parsing"):
         x, target = msa
 
-        proc.append([[i[:512] for i in x], target[:512]])
-        proc.append([[i[512:] for i in x], target[512:]])
-        x = None
+        msas[ix] = ([i[:512] for i in x], target[:512])
+
+        # proc.append([[i[:512] for i in x], target[:512]])
+        # proc.append([[i[512:] for i in x], target[512:]])
+        # x = None
     
     print("Storing data...")
     with open("msa_seq1k_split_30k.pkl", "wb") as f:
-        pickle.dump(proc, f)
+        pickle.dump(msas, f)
     
 
 
