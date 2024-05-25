@@ -10,8 +10,11 @@ def process(data: str):
     with open(data, "rb") as f:
         msas = pickle.load(f)
 
-    for ix, msa in tqdm(enumerate(msas), desc="parsing"):
-        x, target = msa
+    ogl = len(msas)
+    print(ogl)
+
+    for ix in tqdm(range(ogl), desc="parsing"):
+        x, target = msas[ix]
 
         msas.append(([i[512:] for i in x], target[512:]))
         msas[ix] = ([i[:512] for i in x], target[:512])
