@@ -121,6 +121,7 @@ class MSAMambaForSequenceClassification(nn.Module):
     def __init__(self, config: MSAMambaClassificationConfig):
         super().__init__()
 
+        self.config = config
         self.mamba = MSAMamba(config.n_layers, config.d_model, config.vocab_size, config.n_heads, config.d_attn, config.dropout_p, config.d_mem, config.act, config.norm)
         self.pooler = nn.Sequential(
             nn.Linear(config.d_model, config.d_model),
@@ -139,5 +140,8 @@ class MSAMambaForSequenceClassification(nn.Module):
         return self.classifier(self.dropout(self.pooler(out)))
     
     def load_mamba(self, mamba_dict):
-        self.mamba.load_state_dict(mamba_dict)
+        mambamlm = MSAMambaForMLM(self.config)
+        mambamlm.load_state_dict(mamba_dict)
+        self.mamba = mambamlm.mamba
+        del mambamlm
 
