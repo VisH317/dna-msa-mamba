@@ -20,4 +20,4 @@ def get_finetune_data(data_path: str):
             if ix >= MAX_TRAIN: break
 
 if __name__ == "__main__":
-    get_finetune_data("songlab/clinvar")
+    get_finetune_data("songlab/omim")

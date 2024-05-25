@@ -14,7 +14,7 @@ def get_stuff():
 
     MSAs = []
 
-    with open("msa_seq1k_clinvar.csv", "r", newline="") as f:
+    with open("msa_seq1k_omim.csv", "r", newline="") as f:
         reader = csv.reader(f)
         for ix, row in tqdm(enumerate(reader), desc="getting MSAs", total=1500*24):
             if ix == 0: continue
@@ -24,7 +24,7 @@ def get_stuff():
                 with open(f"msa_seq1k_24k_{ix}_ckpt.pkl", "wb") as f:
                     pickle.dump(MSAs, f)
 
-    with open("msa_seq1k_30k_clinvar.pkl", "wb") as f:
+    with open("msa_seq1k_30k_omim.pkl", "wb") as f:
         pickle.dump(MSAs, f)
 
 

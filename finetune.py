@@ -34,8 +34,8 @@ class FinetuneConfig:
 
 def finetune(model_path: str, model_config: MSAMambaClassificationConfig, tune_config: FinetuneConfig):
 
-    # wandb.login(key=WANDB_KEY)
-    # wandb.init(project="msa-finetune", config=tune_config.to_dict() + model_config.to_dict())
+    wandb.login(key=WANDB_KEY)
+    wandb.init(project="msa-finetune", config=tune_config.to_dict() + model_config.to_dict())
 
     print("setting up model...")
     model_dict = torch.load(model_path)

@@ -22,7 +22,7 @@ def process(data: str):
         # proc.append([[i[512:] for i in x], target[512:]])
         # x = None
     
-    print("Storing data...")
+    print("Storing data...", len(msas))
     with open("msa_seq1k_split_30k_clinvar.pkl", "wb") as f:
         pickle.dump(msas, f)
     
