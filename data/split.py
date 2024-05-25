@@ -13,6 +13,7 @@ def process(data: str):
     for ix, msa in tqdm(enumerate(msas), desc="parsing"):
         x, target = msa
 
+        msas.append(([i[512:] for i in x], target[512:]))
         msas[ix] = ([i[:512] for i in x], target[:512])
 
         # proc.append([[i[:512] for i in x], target[:512]])
