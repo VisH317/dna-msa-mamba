@@ -10,7 +10,8 @@ import pickle
 WANDB_KEY = "b2e79ea06ca3e1963c1b930a9944bce6938bbb59"
 
 class FinetuneConfig:
-    def __init__(self, data_path: str, task_name: str, n_epochs: int, batch_size: int, val_batch: int = 2, grad_accum_steps: int = 4, max_steps: int = 7500, weight_decay: float = 0.001) -> None:
+    def __init__(self, data_path: str, lr: float, task_name: str, n_epochs: int, batch_size: int, val_batch: int = 2, grad_accum_steps: int = 4, max_steps: int = 7500, weight_decay: float = 0.001) -> None:
+        self.lr = lr
         self.data_path = data_path
         self.task_name = task_name
         self.n_epochs = n_epochs
@@ -34,13 +35,17 @@ class FinetuneConfig:
 
 def finetune(model_path: str, model_config: MSAMambaClassificationConfig, tune_config: FinetuneConfig):
 
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
     wandb.login(key=WANDB_KEY)
-    wandb.init(project="msa-finetune", config=tune_config.to_dict() + model_config.to_dict())
+    wandb.init(project="msa-finetune", config=tune_config.to_dict().update(model_config.to_dict()))
 
     print("setting up model...")
     model_dict = torch.load(model_path)
     model = MSAMambaForSequenceClassification(model_config)
     model.load_mamba(model_dict)
+
+    model = model.to(device=device)
 
     wandb.watch(model)
 
@@ -63,6 +68,7 @@ def finetune(model_path: str, model_config: MSAMambaClassificationConfig, tune_c
         opt.zero_grad()
         for ix, data in tqdm(enumerate(train_loader), desc=f"Epoch {epoch+1}", total=max(tune_config.max_steps, dataset.train_steps)):
             x, target = data
+            print(x.size(), target.size(), x.dtype)
 
             y = model(x)
             loss = criterion(y[:, 0], target)
@@ -114,7 +120,8 @@ if __name__ == "__main__":
     )
 
     finetune_config = FinetuneConfig(
-        data_path="bruh",
+        lr=9e-6, 
+        data_path="data/msa_seq1k_30k_clinvar.pkl",
         task_name="finetune_test",
         n_epochs=4,
         batch_size=2,

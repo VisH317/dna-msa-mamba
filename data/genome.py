@@ -12,7 +12,8 @@ def get_stuff():
     X = msa.get_msa("1", 100000, 101024, strand="+", tokenize=True)
     print("MSA retrieval: ", X)
 
-    MSAs = []
+    with open("msa_seq1k_24k_17999_ckpt.pkl", "rb") as f:
+        MSAs = pickle.load(f)
 
     with open("msa_seq1k_omim.csv", "r", newline="") as f:
         reader = csv.reader(f)
