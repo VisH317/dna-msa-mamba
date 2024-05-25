@@ -24,7 +24,7 @@ def collate(data: list[tuple[list, list]]) -> tuple[Tensor, Tensor]:
     return x, target
 
 def collate_binary(data: list[tuple[list, int]]) -> tuple[Tensor, Tensor]:
-    x = torch.stack([torch.as_tensor(d[0], device=device, dtype=torch.long) for d in data], dim=0)
+    x = torch.stack([torch.as_tensor(d[0], device=device, dtype=torch.long) for d in data], dim=0).transpose(2, 1)
     target = torch.as_tensor([d[1] for d in data], device=device, dtype=torch.float)
     return x, target
 
