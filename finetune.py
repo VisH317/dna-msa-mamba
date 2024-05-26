@@ -75,8 +75,9 @@ def finetune(model_path: str, model_config: MSAMambaClassificationConfig, tune_c
             loss.backward()
             accuracy = torch.sum(target==torch.argmax(y, dim=-1))/tune_config.batch_size
 
-            wandb.log({"train_loss": loss.item(), "train_accuracy": accuracy.item()})
+            wandb.log({"train_loss": loss.item(), "train_accuracy": accuracy.item(), "lr": opt.param_groups[0]["lr"]})
             losses.append(loss.item())
+            wandb.log({"running train loss": sum(losses[max(0, len(losses)-16):])/len(losses[max(0, len(losses)-16):])})
             accs.append(accuracy.item())
 
 
@@ -99,7 +100,7 @@ def finetune(model_path: str, model_config: MSAMambaClassificationConfig, tune_c
                     
                     y = model(x)
                     loss = criterion(y[:, 0], target)
-                    accuracy = torch.sum(target==torch.argmax(y, dim=-1))/tune_config.batch_size
+                    accuracy = torch.sum(target==torch.argmax(y, dim=-1))/tune_config.val_batch
 
                     wandb.log({"val_loss": loss.item(), "val_accuracy": accuracy.item()})
 
