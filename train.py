@@ -91,24 +91,26 @@ def train(train_config: TrainConfig, model_config: MSAMambaConfig):
 
             if ix >= MAX_EPOCH_LEN: break
 
+            if ix % train_config.val_step == 0:
+                with torch.no_grad():
+                    try:
+                        input, target = next(val_loader_iter)
+                    except:
+                        val_loader = dataset.get_val_dataloader()
+                        val_loader_iter = iter(val_loader)
+                        input, target = next(val_loader_iter)
+
+                    y = model(input.to(device=device))[:, 0]
+                    loss = criterion(y.transpose(2, 1), target.to(device=device))
+                    val_losses.append(loss.item())
+                    wandb.log({"val_loss": loss.item()})
+
         scheduler.step()
 
     torch.save(model.state_dict(), "model.pt")
     with open("losses.pkl", "wb") as f:
-        pickle.dump(losses, f)
+        pickle.dump([losses, val_losses], f)
     
     wandb.save("model.pt")
     wandb.save("losses.pkl")
 
-            # if ix % train_config.val_step == 0:
-            #     with torch.no_grad():
-            #         try:
-            #             input, target = next(val_loader_iter)
-            #         except:
-            #             val_loader = dataset.get_val_dataloader()
-            #             val_loader_iter = iter(val_loader)
-            #             input, target = next(val_loader_iter)
-
-            #         y = model(input.to(device=device))[:, 0]
-            #         loss = criterion(y.transpose(2, 1), target.to(device=device))
-            #         val_losses.append(loss.item())
