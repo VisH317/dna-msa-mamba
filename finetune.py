@@ -77,7 +77,7 @@ def finetune(model_path: str, model_config: MSAMambaClassificationConfig, tune_c
 
             wandb.log({"train_loss": loss.item(), "train_accuracy": accuracy.item(), "lr": opt.param_groups[0]["lr"]})
             losses.append(loss.item())
-            wandb.log({"running train loss": sum(losses[max(0, len(losses)-16):])/len(losses[max(0, len(losses)-16):])})
+            wandb.log({"running train loss": sum(losses[max(0, len(losses)-tune_config.grad_accum_steps):])/len(losses[max(0, len(losses)-tune_config.grad_accum_steps):])})
             accs.append(accuracy.item())
 
 
