@@ -58,7 +58,7 @@ def finetune(model_path: str, model_config: MSAMambaClassificationConfig, tune_c
     accs = []
 
     criterion = nn.BCEWithLogitsLoss()
-    opt = torch.optim.AdamW(model.parameters(), lr=tune_config.lr, betas=(0.9, 0.99), weight_decay=tune_config.weight_decay)
+    opt = torch.optim.AdamW(model.parameters(), lr=tune_config.lr, betas=(0.9, 0.95), weight_decay=tune_config.weight_decay)
     scheduler = torch.optim.lr_scheduler.LinearLR(opt, start_factor=0.2, total_iters=dataset.train_steps//(tune_config.grad_accum_steps * 10))
 
     for epoch in range(tune_config.n_epochs):
