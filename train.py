@@ -47,7 +47,7 @@ def train(train_config: TrainConfig, model_config: MSAMambaConfig):
     pytorch_total_params = sum(p.numel() for p in model.parameters())
     print("param count: ", pytorch_total_params)
 
-    MAX_EPOCH_LEN = 7500
+    MAX_EPOCH_LEN = 22500
 
     dataset = MSAGenome(train_config.datapath, train_config.batch_size, train_config.val_batch_size)
     
