@@ -24,6 +24,7 @@ class TrainConfig:
     
     def to_dict(self):
         return {
+            "seqlen": 1024,
             "n_epochs": self.n_epochs,
             "lr": self.lr,
             "batch_size": self.batch_size,
