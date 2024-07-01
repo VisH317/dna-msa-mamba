@@ -8,7 +8,7 @@ class MSAMambaBlock(nn.Module):
     def __init__(self, n_layers: int, d_model: int, n_heads: int = 4, d_attn: int = -1, dropout_p: float = 0, d_mem: int = -1, act="silu", norm="rmsnorm") -> None:
         super().__init__()
 
-        self.mamba = create_block(d_model)
+        self.mamba = create_block(d_model, 2 * d_model)
         self.att = ColumnAttention(d_model, n_heads, d_attn, dropout_p)
         self.transition = MLP(d_model, d_mem, act)
 
