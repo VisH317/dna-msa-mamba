@@ -55,6 +55,7 @@ def finetune(model_path: str, model_config: MSAMambaClassificationConfig, tune_c
     dataset = MSAGenome(tune_config.data_path, tune_config.batch_size, tune_config.val_batch, collate_fn=collate_binary)
 
     losses = []
+    val_losses = []
     accs = []
 
     criterion = nn.BCEWithLogitsLoss()
@@ -102,12 +103,13 @@ def finetune(model_path: str, model_config: MSAMambaClassificationConfig, tune_c
                     loss = criterion(y[:, 0], target)
                     accuracy = torch.sum(target==torch.argmax(y, dim=-1))/tune_config.val_batch
 
+                    val_losses.append(loss.item(0))
                     wandb.log({"val_loss": loss.item(), "val_accuracy": accuracy.item()})
 
     torch.save(model.state_dict(), f"model_{tune_config.task_name}.pt")
     wandb.save(f"model_{tune_config.task_name}.pt")
     with open(f"losses_{tune_config.task_name}.pkl", "wb") as f:
-        pickle.dump([losses, accs], f)
+        pickle.dump([losses, val_losses, accs], f)
     
     wandb.save(f"losses_{tune_config.task_name}.pkl")
 
