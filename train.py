@@ -34,7 +34,7 @@ class TrainConfig:
         }
 
 
-def train(train_config: TrainConfig, model_config: MSAMambaConfig):
+def train(train_config: TrainConfig, model_config: MSAMambaConfig, train_ckpt: str = "model_ckpt.pt"):
 
     wandb.login(key=WANDB_KEY)
     wandb.init(project="msamamba", config=train_config.to_dict())
@@ -43,6 +43,7 @@ def train(train_config: TrainConfig, model_config: MSAMambaConfig):
 
     print("Creating model & data...")
     model = MSAMambaForMLM(model_config).to(device=device)
+    model.load_state_dict(torch.load(train_ckpt))
     wandb.watch(model, log="all")
 
     pytorch_total_params = sum(p.numel() for p in model.parameters())
