@@ -1,6 +1,8 @@
 89.zarr
 89.zarr.tar.gz
-**/*.pkl
 **/__pycache__
 wandb
 **/*.zip
+artifacts/ckpt/**
+artifacts/logs/**
+data/*.pkl
