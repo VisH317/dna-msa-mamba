@@ -24,16 +24,19 @@ class ConvHydra(nn.Module):
         assert (self.expand * self.d_model) % self.n_heads == 0, "heads do not work"
         self.headdim = (self.expand * self.d_model) // self.n_heads
         
-        self.in_conv = FFTConv1d(d_model, d_model * n_heads, kernel_size=self.kernel_size, padding=self.kernel_size//2) # TODO: test this value
-        self.out_conv = FFTConv1d(d_model * n_heads, d_model, kernel_size=self.kernel_size, padding=self.kernel_size//2)
+        self.in_conv = FFTConv1d(d_model, d_model * n_heads, kernel_size=self.kernel_size, padding="same") # TODO: test this value
+        self.out_conv = FFTConv1d(d_model * n_heads, d_model, kernel_size=self.kernel_size, padding="same")
         
         self.hydra = Hydra(d_model, d_conv=d_conv, headdim=self.headdim, expand=expand)
         
     # x: B x S x D
     def forward(self, x: Tensor) -> Tensor:
         b, s, d = x.size()
+        print(x.size())
         
-        x_proj = self.act1(self.in_conv(x.view(b, d, s)).view(b * self.n_heads, s, d))
+        x_proj = self.in_conv(x.view(b, d, s))
+        x_proj = self.act1(x_proj.view(b * self.n_heads, s, d))
+        
         x_out = self.hydra(x_proj)
         x_out = self.act2(self.out_conv(x_out.view(b, d * self.n_heads, s)).view(b, s, d))
         

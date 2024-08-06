@@ -8,7 +8,7 @@ from modules.utils.mlp import MLP
 from modules.utils.rmsnorm import RMSNorm
 
 
-class MSAMambaV2(nn.Module):
+class MSAMambaV2Block(nn.Module):
     def __init__(self, d_model: int, n_query: int, n_kv: int, n_channels: int, kernel_size: int, expand: int, 
                  d_conv: int, mlp_expand: int = 4, act: str = "silu", d_attn: int | None = None, norm_eps: float = 1e-6, 
                  dropout_p: float = 0.0):
@@ -40,7 +40,6 @@ class MSAMambaV2(nn.Module):
         
         self.norm1 = RMSNorm(d_model, eps=norm_eps)
         self.norm2 = RMSNorm(d_model, eps=norm_eps)
-        self.norm3 = RMSNorm(d_model, eps=norm_eps)
         
     # x: B x M x S x D
     def forward(self, x: Tensor) -> Tensor:
@@ -48,7 +47,7 @@ class MSAMambaV2(nn.Module):
         x_out_main = self.norm1(self.convhydra(x_main) + x_main)
         
         x_out = torch.concat([x_out_main, x[:, 1:, :, :]], dim=1)
-        x_out = self.norm2(self.msa_sa(x_out) + x_out)
+        x_out = self.msa_sa(x_out)
         
-        return self.norm3(self.mlp(x_out) + x_out)
+        return self.norm2(self.mlp(x_out) + x_out)
 

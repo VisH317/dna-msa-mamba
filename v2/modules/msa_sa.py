@@ -2,6 +2,7 @@ import torch
 from torch import nn, Tensor
 import torch.nn.functional as F
 from modules.utils.rmsnorm import RMSNorm
+from modules.utils.gqa import grouped_query_attention
 
 # sparse version that only maps main sequence to auxiliary (saves memory!)
 class MSASelfAttention(nn.Module):
@@ -16,7 +17,7 @@ class MSASelfAttention(nn.Module):
         
         self.w_kv = nn.Linear(d_model, 2 * self.n_kv * d_attn)
         self.w_q = nn.Linear(d_model, self.n_heads * d_attn)
-        self.w_o = nn.Linear(d_attn * self.n_kv, d_model)
+        self.w_o = nn.Linear(d_attn * self.n_heads, d_model)
         
         self.norm = RMSNorm(d_model, eps=norm_eps)
 
@@ -25,11 +26,11 @@ class MSASelfAttention(nn.Module):
         b, m, s, d = x.size()
         x = x.view(b, s, m, d)
         
-        Q = self.w_q(x[:, :, 0, :]).reshape(b, s, self.n_query_heads, m, self.d_attn)
-        kv = self.w_kv(x).reshape(b, s, self.n_out_channels, 1, 2 * self.d_attn)
-        K, V = kv.split([self.d_attn, self.d_attn])
+        Q = self.w_q(x).reshape(b * s, self.n_query_heads, m, self.d_attn)
+        kv = self.w_kv(x[:, :, 0, :]).reshape(b * s, self.n_out_channels, 1, 2 * self.d_attn)
+        K, V = kv.split([self.d_attn, self.d_attn], dim=-1)
         
-        o = F.scaled_dot_product_attention(Q, K, V, dropout_p=self.dropout_p)
-        O = self.w_o(o.view(b, s, d * self.n_out_channels)).squeeze().reshape(b, s, d) # B x C x S x D
+        o = grouped_query_attention(Q, K, V, dropout=self.dropout_p)
+        O = self.w_o(o.view(b, s, d * self.n_out_channels).squeeze()).reshape(b, s, d) # B x C x S x D
         return self.norm(O + x)
         
