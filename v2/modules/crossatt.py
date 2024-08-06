@@ -16,7 +16,7 @@ class MSACrossAttention(nn.Module):
         
         self.w_kv = nn.Linear(d_model, 2 * n_out_channels * d_attn)
         self.w_q = nn.Linear(d_model, n_query_heads * d_attn)
-        self.w_o = nn.Linear(d_attn, d_model)
+        self.w_o = nn.Linear(d_attn * n_out_channels, d_model)
         
         self.norm = RMSNorm(d_model, eps=norm_eps)
 
@@ -30,10 +30,6 @@ class MSACrossAttention(nn.Module):
         K, V = kv.split([self.d_attn, self.d_attn])
         
         o = F.scaled_dot_product_attention(Q, K, V, dropout_p=self.dropout_p)
-        O = self.w_o(o).squeeze().reshape(b, self.n_out_channels, s, d) # B x S x C x D
+        O = self.w_o(o.view(b, s, d * self.n_out_channels)).squeeze().reshape(b, s, d) # B x C x S x D
         return self.norm(O + x[:, :, 0, :])
-        
-        
-        
-        
         
