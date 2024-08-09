@@ -26,11 +26,11 @@ class MSASelfAttention(nn.Module):
         b, m, s, d = x.size()
         x = x.view(b, s, m, d)
         
-        Q = self.w_q(x).reshape(b * s, self.n_query_heads, m, self.d_attn)
-        kv = self.w_kv(x[:, :, 0, :]).reshape(b * s, self.n_out_channels, 1, 2 * self.d_attn)
+        Q = self.w_q(x).reshape(b * s, self.n_heads, m, self.d_attn)
+        kv = self.w_kv(x[:, :, 0, :]).reshape(b * s, self.n_kv, 1, 2 * self.d_attn)
         K, V = kv.split([self.d_attn, self.d_attn], dim=-1)
         
         o = grouped_query_attention(Q, K, V, dropout=self.dropout_p)
-        O = self.w_o(o.view(b, s, d * self.n_out_channels).squeeze()).reshape(b, s, d) # B x C x S x D
-        return self.norm(O + x)
+        O = self.w_o(o.view(b, m, s, d * self.n_kv).squeeze()) # B x C x S x D
+        return self.norm(O + x.view(b, m, s, d))
         

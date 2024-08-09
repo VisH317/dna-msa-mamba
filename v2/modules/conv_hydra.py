@@ -32,7 +32,6 @@ class ConvHydra(nn.Module):
     # x: B x S x D
     def forward(self, x: Tensor) -> Tensor:
         b, s, d = x.size()
-        print(x.size())
         
         x_proj = self.in_conv(x.view(b, d, s))
         x_proj = self.act1(x_proj.view(b * self.n_heads, s, d))

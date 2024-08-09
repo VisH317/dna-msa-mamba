@@ -1,6 +1,6 @@
 import torch
 from torch import nn, optim
-from data.dataset import MSAGenome
+from data.genome import MSAGenome
 from modules.msamambav2 import MSAMambaV2ForMLM, MSAMambaV2Config
 from tqdm import tqdm
 import pickle
@@ -35,18 +35,18 @@ class TrainConfig:
         }
 
 
-def train(train_config: TrainConfig, model_config: MSAMambaV2Config, train_ckpt: str = "model_ckpt.pt"):
+def train(train_config: TrainConfig, model_config: MSAMambaV2Config, train_ckpt: str | None = None):
 
-    wandb.login(key=WANDB_KEY)
+    # wandb.login(key=WANDB_KEY)
     
-    wandb.init(project="msamambav2", config=train_config.to_dict() | asdict(model_config))
+    # wandb.init(project="msamambav2", config=train_config.to_dict() | asdict(model_config))
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     print("Creating model & data...")
     model = MSAMambaV2ForMLM(model_config).to(device=device)
-    model.load_state_dict(torch.load(train_ckpt))
-    wandb.watch(model, log="all")
+    if train_ckpt: model.load_state_dict(torch.load(train_ckpt))
+    # wandb.watch(model, log="all")
 
     pytorch_total_params = sum(p.numel() for p in model.parameters())
     print("param count: ", pytorch_total_params)
@@ -70,15 +70,18 @@ def train(train_config: TrainConfig, model_config: MSAMambaV2Config, train_ckpt:
         train_loader, val_loader = dataset.get_dataloaders()
         # val_loader_iter = iter(val_loader)
 
+        torch.autograd.set_detect_anomaly(True)
+        
         opt.zero_grad()
         for ix, data in (bar := tqdm(enumerate(train_loader), desc=f"Epoch: {epoch+1}, Loss: N/A, Val: N/A", total=min(MAX_EPOCH_LEN, len(dataset)//train_config.batch_size))):
             input, target = data
-            y = model(input)[:, 0]
+            y = model(input.to(dtype=torch.int64))[:, 0]
             
+            print(target.size(), input.size())
             loss = criterion(y.transpose(2, 1), target)
-            losses.append(loss.item())
-            wandb.log({ "train_loss": loss.item() })
             loss.backward()
+            losses.append(loss.item())
+            # wandb.log({ "train_loss": loss.item() })
 
             if (ix+1) % train_config.grad_accum_iter == 0:
                 if train_config.grad_clip is not None: nn.utils.clip_grad_norm_(model.parameters(), train_config.grad_clip)
@@ -103,7 +106,7 @@ def train(train_config: TrainConfig, model_config: MSAMambaV2Config, train_ckpt:
                     y = model(input.to(device=device))[:, 0]
                     loss = criterion(y.transpose(2, 1), target.to(device=device))
                     val_losses.append(loss.item())
-                    wandb.log({"val_loss": loss.item()})
+                    # wandb.log({"val_loss": loss.item()})
 
         scheduler.step()
 

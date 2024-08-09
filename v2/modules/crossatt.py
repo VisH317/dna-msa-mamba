@@ -27,14 +27,18 @@ class MSACrossAttention(nn.Module):
 
     # X: B x M x S x D
     def forward(self, x: Tensor) -> Tensor:
+        x = x.clone()
         b, m, s, d = x.size()
-        x = x.view(b, s, m, d)
+        x1 = x.reshape(b, s, m, d).contiguous()
+        q = x[:, 0, :, :].contiguous()
         
-        Q = self.w_q(x[:, :, 0, :]).reshape(b * s, self.n_query_heads, 1, self.d_attn)
-        kv = self.w_kv(x).reshape(b * s, self.n_out_channels, m, 2 * self.d_attn)
+        kv = self.w_kv(x1)
+        Q = self.w_q(q)
+        Q = Q.reshape(b * s, self.n_query_heads, 1, self.d_attn)
+        kv = kv.reshape(b * s, self.n_out_channels, m, 2 * self.d_attn)
         K, V = kv.split([self.d_attn, self.d_attn], dim=-1)
         
         o = grouped_query_attention(Q, K, V, dropout=self.dropout_p)
-        O = self.w_o(o.view(b, s, d * self.n_out_channels).squeeze()).reshape(b, s, d) # B x C x S x D
-        return self.norm(O + x[:, :, 0, :])
+        O = self.w_o(o.view(b, s, d * self.n_out_channels).squeeze()) # B x C x S x D
+        return self.norm(O + q)
         

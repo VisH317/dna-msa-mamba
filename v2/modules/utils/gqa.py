@@ -24,5 +24,4 @@ def grouped_query_attention(Q: Tensor, K: Tensor, V: Tensor, dropout: float = 0.
         
     out = einsum(attention, V, "b g h n s, b h s d -> b g h n d")
     
-    print(out.size())
     return rearrange(out, "b g h n d -> b (g h) n d")

@@ -46,9 +46,8 @@ class MSAMambaV2Block(nn.Module):
     def forward(self, x: Tensor) -> Tensor:
         x_main = self.msa_ca(x)
         x_out_main = self.norm1(self.convhydra(x_main) + x_main)
-        
-        x_out = torch.concat([x_out_main, x[:, 1:, :, :]], dim=1)
-        x_out = self.msa_sa(x_out)
+        x[:, 0, :, :] = x_out_main
+        x_out = self.msa_sa(x)
         
         return self.norm2(self.mlp(x_out) + x_out)
 
