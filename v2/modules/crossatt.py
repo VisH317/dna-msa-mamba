@@ -4,6 +4,7 @@ import torch.nn.functional as F
 from modules.utils.rmsnorm import RMSNorm
 from modules.utils.gqa import grouped_query_attention
 from einops import rearrange, einsum    
+from rotary_embedding_torch import RotaryEmbedding
 
 
 class MSACrossAttention(nn.Module):
@@ -24,6 +25,8 @@ class MSACrossAttention(nn.Module):
         self.w_o = nn.Linear(d_attn * n_query_heads, d_model)
         
         self.norm = RMSNorm(d_model, eps=norm_eps)
+        
+        self.rotary = RotaryEmbedding(d_model)
 
     # X: B x M x S x D
     def forward(self, x: Tensor) -> Tensor:
@@ -37,6 +40,9 @@ class MSACrossAttention(nn.Module):
         Q = Q.reshape(b * s, self.n_query_heads, 1, self.d_attn)
         kv = kv.reshape(b * s, self.n_out_channels, m, 2 * self.d_attn)
         K, V = kv.split([self.d_attn, self.d_attn], dim=-1)
+        
+        Q = self.rotary.rotate_queries_or_keys(Q)
+        K = self.rotary.rotate_queries_or_keys(K)
         
         o = grouped_query_attention(Q, K, V, dropout=self.dropout_p)
         O = self.w_o(o.view(b, s, d * self.n_out_channels).squeeze()) # B x C x S x D

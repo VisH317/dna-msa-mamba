@@ -3,6 +3,7 @@ from torch import nn, Tensor
 import torch.nn.functional as F
 from modules.utils.rmsnorm import RMSNorm
 from modules.utils.gqa import grouped_query_attention
+from rotary_embedding_torch import RotaryEmbedding
 
 # sparse version that only maps main sequence to auxiliary (saves memory!)
 class MSASelfAttention(nn.Module):
@@ -20,6 +21,8 @@ class MSASelfAttention(nn.Module):
         self.w_o = nn.Linear(d_attn * self.n_heads, d_model)
         
         self.norm = RMSNorm(d_model, eps=norm_eps)
+        
+        self.rotary = RotaryEmbedding(d_model)
 
     # X: B x M x S x D
     def forward(self, x: Tensor) -> Tensor:
@@ -29,6 +32,9 @@ class MSASelfAttention(nn.Module):
         Q = self.w_q(x).reshape(b * s, self.n_heads, m, self.d_attn)
         kv = self.w_kv(x[:, :, 0, :]).reshape(b * s, self.n_kv, 1, 2 * self.d_attn)
         K, V = kv.split([self.d_attn, self.d_attn], dim=-1)
+        
+        Q = self.rotary.rotate_queries_or_keys(Q)
+        K = self.rotary.rotate_queries_or_keys(K)
         
         o = grouped_query_attention(Q, K, V, dropout=self.dropout_p)
         O = self.w_o(o.view(b, m, s, d * self.n_kv).squeeze()) # B x C x S x D
