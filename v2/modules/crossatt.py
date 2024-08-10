@@ -26,7 +26,7 @@ class MSACrossAttention(nn.Module):
         
         self.norm = RMSNorm(d_model, eps=norm_eps)
         
-        self.rotary = RotaryEmbedding(d_model)
+        self.rotary = RotaryEmbedding(d_attn)
 
     # X: B x M x S x D
     def forward(self, x: Tensor) -> Tensor:
