@@ -35,8 +35,9 @@ class ConvHydra(nn.Module):
         
         x_proj = self.in_conv(x.view(b, d, s))
         x_proj = self.act1(x_proj.view(b * self.n_heads, s, d))
-        
+        print(x_proj.size())
         x_out = self.hydra(x_proj)
+        print(x_out.size())
         x_out = self.act2(self.out_conv(x_out.view(b, d * self.n_heads, s)).view(b, s, d))
         
         return x_out
