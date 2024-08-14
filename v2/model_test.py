@@ -14,10 +14,16 @@ model = MSAMambaV2Block(
     d_attn=4,
     norm_eps=1e-6,
     dropout_p=0.0
-)
+).cuda()
 
-msa = torch.rand(2, 5, 32, 8)
+msa = torch.rand(2, 5, 32, 8).cuda()
 
 out = model(msa)
 
 print(out)
+
+# from modules.hydra.modules.hydra import Hydra
+
+# hydra = Hydra(8, d_conv=5, headdim=8, expand=2)
+
+# hydra(torch.rand(2, 32, 8))

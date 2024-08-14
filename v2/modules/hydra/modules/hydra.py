@@ -152,6 +152,8 @@ class Hydra(nn.Module):
         )
         B, C = torch.split(BC, [self.ngroups * self.d_state, self.ngroups * self.d_state], dim=-1)
 
+        print(dt.size(), self.nheads)
+        exit()
         y = mamba_chunk_scan_combined(
             rearrange(x, "b l (h p) -> b l h p", p=self.headdim),
             dt,
