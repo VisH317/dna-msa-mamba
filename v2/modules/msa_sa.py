@@ -37,6 +37,6 @@ class MSASelfAttention(nn.Module):
         K = self.rotary.rotate_queries_or_keys(K)
         
         o = grouped_query_attention(Q, K, V, dropout=self.dropout_p)
-        O = self.w_o(o.view(b, m, s, d * self.n_kv).squeeze()) # B x C x S x D
+        O = self.w_o(o.view(b, m, s, self.d_attn * self.n_heads).squeeze()) # B x C x S x D
         return self.norm(O + x.view(b, m, s, d))
         
