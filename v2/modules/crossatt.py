@@ -45,6 +45,6 @@ class MSACrossAttention(nn.Module):
         K = self.rotary.rotate_queries_or_keys(K)
         
         o = grouped_query_attention(Q, K, V, dropout=self.dropout_p)
-        O = self.w_o(o.view(b, s, d * self.n_out_channels).squeeze()) # B x C x S x D
+        O = self.w_o(o.view(b, s, self.d_attn * self.n_query_heads).squeeze()) # B x C x S x D
         return self.norm(O + q)
         
