@@ -77,7 +77,6 @@ def train(train_config: TrainConfig, model_config: MSAMambaV2Config, train_ckpt:
             input, target = data
             y = model(input.to(dtype=torch.int64))[:, 0]
             
-            print(target.size(), input.size())
             loss = criterion(y.transpose(2, 1), target)
             loss.backward()
             losses.append(loss.item())
