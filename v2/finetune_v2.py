@@ -1,9 +1,10 @@
 import torch
 from torch import nn
-from src.model import MSAMambaClassificationConfig, MSAMambaForSequenceClassification
+from v2.modules.msamambav2 import MSAMambaV2ClassificationConfig, MSAMambaV2ForSequenceClassification
 from data.dataset import MSAGenome, collate_binary
 import wandb
 from tqdm import tqdm
+from dataclasses import dataclass
 import pickle
 import os
 
@@ -11,31 +12,21 @@ os.chdir("..")
 
 WANDB_KEY = "b2e79ea06ca3e1963c1b930a9944bce6938bbb59"
 
+@dataclass
 class FinetuneConfig:
-    def __init__(self, data_path: str, lr: float, task_name: str, n_epochs: int, batch_size: int, val_batch: int = 2, grad_accum_steps: int = 4, max_steps: int = 7500, weight_decay: float = 0.001) -> None:
-        self.lr = lr
-        self.data_path = data_path
-        self.task_name = task_name
-        self.n_epochs = n_epochs
-        self.batch_size = batch_size
-        self.val_batch = val_batch
-        self.grad_accum_steps = grad_accum_steps
-        self.max_steps = max_steps
-        self.weight_decay = weight_decay
+    lr: float
+    data_path: str
+    task_name: str
+    n_epochs: int
+    batch_size: int
+    val_batch: int
+    grad_accum_steps: int
+    max_steps: int
+    weight_decay: float
     
-    def to_dict(self):
-        return {
-            "data_path": self.data_path,
-            "task_name": self.task_name,
-            "n_epochs": self.n_epochs,
-            "batch_size": self.batch_size,
-            "val_batch": self.val_batch,
-            "grad_accum_steps": self.grad_accum_steps,
-            "max_steps": self.max_steps,
-        }
+    
 
-
-def finetune(model_path: str, model_config: MSAMambaClassificationConfig, tune_config: FinetuneConfig):
+def finetune(model_path: str, model_config: MSAMambaV2ClassificationConfig, tune_config: FinetuneConfig):
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -44,7 +35,7 @@ def finetune(model_path: str, model_config: MSAMambaClassificationConfig, tune_c
 
     print("setting up model...")
     model_dict = torch.load(model_path)
-    model = MSAMambaForSequenceClassification(model_config)
+    model = MSAMambaV2ForSequenceClassification(model_config)
     model.load_mamba(model_dict)
 
     model = model.to(device=device)

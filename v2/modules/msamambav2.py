@@ -140,9 +140,51 @@ class MSAMambaV2ForMLM(nn.Module):
     def __init__(self, config: MSAMambaV2Config) -> None:
         super().__init__()
         
+        self.config = config
         self.model = MSAMambaV2.from_config(config)
         self.lmhead = nn.Linear(config.d_model, config.vocab_size)
         
+    def get_config(self) -> MSAMambaV2Config: return self.config
+    
     def forward(self, x: Tensor) -> Tensor:
         return self.lmhead(self.model(x))
+
+@dataclass
+class MSAMambaV2ClassificationConfig:
+    model_config: MSAMambaV2Config
+    n_classes: int
+    cls_dropout_p: float = 0
+
+class MSAMambaV2ForSequenceClassification(nn.Module):
+    def __init__(self, config: MSAMambaV2ClassificationConfig):
+        super().__init__()
+        
+        self.config = config
+        self.mamba = MSAMambaV2.from_config(config)
+        
+        self.classifier = nn.Linear(config.model_config.d_model, config.n_classes)
+        
+        if config.cls_dropout_p > 0:
+            self.dropout = nn.Dropout(config.cls_dropout_p)
+            self.classifier = nn.Sequential(
+                self.dropout,
+                self.classifier
+            )
+        
+    def get_config(self) -> MSAMambaV2ClassificationConfig: return self.config
+    
+    def load_mamba_from_mlm(self, mamba_dict) -> None:
+        mambamlm = MSAMambaV2ForMLM(self.config.model_config)
+        mambamlm.load_state_dict(mamba_dict)
+        self.mamba = mambamlm.model
+        del mambamlm
+    
+    def load_mamba(self, mamba_dict) -> None:
+        mamba = MSAMambaV2(self.config.model_config)
+        mamba.load_state_dict(mamba_dict)
+        self.mamba = mamba
+    
+    def forward(self, x: Tensor) -> Tensor:
+        return self.classifier(self.mamba(x))
+        
 
