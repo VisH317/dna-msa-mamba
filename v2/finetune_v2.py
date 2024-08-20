@@ -69,12 +69,12 @@ def finetune(model_path: str, model_config: MSAMambaV2ClassificationConfig, tune
             y = model(x.to(device))
             loss = criterion(y[:, 0], target_t.to(device))
             loss.backward()
-            accuracy = torch.sum(target_t==torch.argmax(y, dim=-1))/tune_config.batch_size
+            # accuracy = torch.sum(target_t==torch.argmax(y, dim=-1))/tune_config.batch_size
 
-            wandb.log({"train_loss": loss.item(), "train_accuracy": accuracy.item(), "lr": opt.param_groups[0]["lr"]})
+            wandb.log({"train_loss": loss.item(), "lr": opt.param_groups[0]["lr"]})
             losses.append(loss.item())
             wandb.log({"running train loss": sum(losses[max(0, len(losses)-tune_config.grad_accum_steps):])/len(losses[max(0, len(losses)-tune_config.grad_accum_steps):])})
-            accs.append(accuracy.item())
+            # accs.append(accuracy.item())
 
 
             if (ix+1)%tune_config.grad_accum_steps == 0:
@@ -99,7 +99,7 @@ def finetune(model_path: str, model_config: MSAMambaV2ClassificationConfig, tune
                     
                     y = model(x)
                     loss = criterion(y[:, 0, 0], target_t)
-                    accuracy = torch.sum(target_t==torch.argmax(y, dim=-1))/tune_config.val_batch
+                    # accuracy = torch.sum(target_t==torch.argmax(y, dim=-1))/tune_config.val_batch
 
                     val_losses.append(loss.item(0))
                     wandb.log({"val_loss": loss.item()})
