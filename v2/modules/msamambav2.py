@@ -110,8 +110,16 @@ class MSAMambaV2(nn.Module):
             for _ in range(self.n_layers)
         ])
         
-    def forward(self, x: Tensor) -> Tensor:
+        self.cls = nn.Parameter(torch.rand(d_model))
+        nn.init.kaiming_uniform_(self.cls)
+        
+    def forward(self, x: Tensor, classification: bool = False) -> Tensor:
+        b, s = x.size()
         x = self.embed(x)
+        if classification:
+            cls_items = self.cls.unsqueeze(0).repeat(b, 1)
+            x = torch.concat([cls_items, x], dim=-2)
+        
         for block in self.blocks: x = block(x)
         
         return x
@@ -185,8 +193,6 @@ class MSAMambaV2ForSequenceClassification(nn.Module):
         self.mamba = mamba
     
     def forward(self, x: Tensor) -> Tensor:
-        b, s = x.size()
-        x = torch.concat([torch.full((b), self.config.model_config.vocab_size), x], dim=-2)
-        return self.classifier(self.mamba(x)[:, 0])
+        return self.classifier(self.mamba(x, classification=True)[:, 0])
         
 
