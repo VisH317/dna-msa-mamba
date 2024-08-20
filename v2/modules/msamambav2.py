@@ -189,7 +189,9 @@ class MSAMambaV2ForSequenceClassification(nn.Module):
     
     def load_mamba(self, mamba_dict) -> None:
         mamba = MSAMambaV2(self.config.model_config)
-        mamba.load_state_dict(mamba_dict)
+        state = mamba.state_dict()
+        state.update(mamba_dict)
+        mamba.load_state_dict(state)
         self.mamba = mamba
     
     def forward(self, x: Tensor) -> Tensor:
