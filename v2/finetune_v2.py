@@ -30,8 +30,8 @@ def finetune(model_path: str, model_config: MSAMambaV2ClassificationConfig, tune
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    # wandb.login(key=WANDB_KEY)
-    # wandb.init(project="msa-finetune-v2", config=asdict(tune_config).update(asdict(model_config)))
+    wandb.login(key=WANDB_KEY)
+    wandb.init(project="msa-finetune-v2", config=asdict(tune_config).update(asdict(model_config)))
 
     print("setting up model...")
     model_dict = torch.load(model_path)
@@ -40,7 +40,7 @@ def finetune(model_path: str, model_config: MSAMambaV2ClassificationConfig, tune
 
     model = model.to(device=device)
 
-    # wandb.watch(model)
+    wandb.watch(model)
 
     pytorch_total_params = sum(p.numel() for p in model.parameters())
     print("model setup complete, param count: ", pytorch_total_params)
