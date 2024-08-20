@@ -69,11 +69,11 @@ def finetune(model_path: str, model_config: MSAMambaV2ClassificationConfig, tune
             y = model(x.to(device))
             loss = criterion(y[:, 0], target_t.to(device))
             loss.backward()
-            accuracy = torch.sum(target==torch.argmax(y, dim=-1))/tune_config.batch_size
+            accuracy = torch.sum(target_t==torch.argmax(y, dim=-1))/tune_config.batch_size
 
-            # wandb.log({"train_loss": loss.item(), "train_accuracy": accuracy.item(), "lr": opt.param_groups[0]["lr"]})
+            wandb.log({"train_loss": loss.item(), "train_accuracy": accuracy.item(), "lr": opt.param_groups[0]["lr"]})
             losses.append(loss.item())
-            # wandb.log({"running train loss": sum(losses[max(0, len(losses)-tune_config.grad_accum_steps):])/len(losses[max(0, len(losses)-tune_config.grad_accum_steps):])})
+            wandb.log({"running train loss": sum(losses[max(0, len(losses)-tune_config.grad_accum_steps):])/len(losses[max(0, len(losses)-tune_config.grad_accum_steps):])})
             accs.append(accuracy.item())
 
 
@@ -94,12 +94,15 @@ def finetune(model_path: str, model_config: MSAMambaV2ClassificationConfig, tune
                         ival_loader = iter(val_loader)
                         x, target = next(ival_loader)
                     
+                    target_t = torch.zeros(x.size()[0], 2)
+                    for ix, item in enumerate(target): target_t[ix, 0 if target[ix]==0 else 1] = item
+                    
                     y = model(x)
-                    loss = criterion(y[:, 0, 0], target)
-                    accuracy = torch.sum(target==torch.argmax(y, dim=-1))/tune_config.val_batch
+                    loss = criterion(y[:, 0, 0], target_t)
+                    accuracy = torch.sum(target_t==torch.argmax(y, dim=-1))/tune_config.val_batch
 
                     val_losses.append(loss.item(0))
-                    wandb.log({"val_loss": loss.item(), "val_accuracy": accuracy.item()})
+                    wandb.log({"val_loss": loss.item()})
 
     torch.save(model.state_dict(), f"model_{tune_config.task_name}.pt")
     wandb.save(f"model_{tune_config.task_name}.pt")
