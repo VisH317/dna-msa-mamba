@@ -1,10 +1,10 @@
 import torch
 from torch import nn
-from v2.modules.msamambav2 import MSAMambaV2ClassificationConfig, MSAMambaV2ForSequenceClassification
-from data.dataset import MSAGenome, collate_binary
+from modules.msamambav2 import MSAMambaV2Config, MSAMambaV2ClassificationConfig, MSAMambaV2ForSequenceClassification
+from data.genome import MSAGenome, collate_binary
 import wandb
 from tqdm import tqdm
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
 import pickle
 import os
 
@@ -31,7 +31,7 @@ def finetune(model_path: str, model_config: MSAMambaV2ClassificationConfig, tune
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     wandb.login(key=WANDB_KEY)
-    wandb.init(project="msa-finetune", config=tune_config.to_dict().update(model_config.to_dict()))
+    wandb.init(project="msa-finetune-v2", config=asdict(tune_config).update(model_config.to_dict()))
 
     print("setting up model...")
     model_dict = torch.load(model_path)
@@ -110,22 +110,40 @@ def finetune(model_path: str, model_config: MSAMambaV2ClassificationConfig, tune
 
 
 if __name__ == "__main__":
-    model_config = MSAMambaClassificationConfig(
-        n_layers=3,
-        d_model=118,
+    
+    model_config = MSAMambaV2Config(
+        n_layers=4,
         vocab_size=6,
-        n_heads=4,
+        d_model=64,
+        n_query=6,
+        n_kv=3,
+        d_attn=32,
+        norm_eps=1e-5,
         dropout_p=0,
+        n_channels=2,
+        kernel_size=128,
+        expand=2,
+        d_conv=4,
+        mlp_expand=4,
+        act="silu"
     )
 
-    finetune_config = FinetuneConfig(
-        lr=9e-6, 
-        data_path="data/msa_seq1k_30k_clinvar.pkl",
-        task_name="finetune_test",
-        n_epochs=4,
+    classification_config = MSAMambaV2ClassificationConfig(
+        model_config=model_config,
+        n_classes = 2,
+        cls_dropout_p = 0.1
+    )
+
+    tune_config = FinetuneConfig(
+        lr=3e-4,
+        data_path="../data/msa_seq1k_30k_clinvar.pkl",
+        task_name="clinvar",
+        n_epochs=3,
         batch_size=2,
         val_batch=1,
-        grad_accum_steps=16
+        grad_accum_steps=16,
+        weight_decay=0.001
     )
 
-    finetune("msamamba.pt", model_config, finetune_config)
+
+    finetune("msamamba.pt", classification_config, tune_config)
