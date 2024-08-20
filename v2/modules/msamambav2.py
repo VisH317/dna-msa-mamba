@@ -84,7 +84,7 @@ class MSAMambaV2(nn.Module):
         
         self.d_model = d_model
         self.n_layers = n_layers
-        self.vocab_size = vocab_size + 1
+        self.vocab_size = vocab_size
         
         # attention hyperparams
         self.n_query = n_query

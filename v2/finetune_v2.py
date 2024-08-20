@@ -30,8 +30,8 @@ def finetune(model_path: str, model_config: MSAMambaV2ClassificationConfig, tune
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    wandb.login(key=WANDB_KEY)
-    wandb.init(project="msa-finetune-v2", config=asdict(tune_config).update(asdict(model_config)))
+    # wandb.login(key=WANDB_KEY)
+    # wandb.init(project="msa-finetune-v2", config=asdict(tune_config).update(asdict(model_config)))
 
     print("setting up model...")
     model_dict = torch.load(model_path)
@@ -40,7 +40,7 @@ def finetune(model_path: str, model_config: MSAMambaV2ClassificationConfig, tune
 
     model = model.to(device=device)
 
-    wandb.watch(model)
+    # wandb.watch(model)
 
     pytorch_total_params = sum(p.numel() for p in model.parameters())
     print("model setup complete, param count: ", pytorch_total_params)
@@ -69,9 +69,9 @@ def finetune(model_path: str, model_config: MSAMambaV2ClassificationConfig, tune
             loss.backward()
             accuracy = torch.sum(target==torch.argmax(y, dim=-1))/tune_config.batch_size
 
-            wandb.log({"train_loss": loss.item(), "train_accuracy": accuracy.item(), "lr": opt.param_groups[0]["lr"]})
+            # wandb.log({"train_loss": loss.item(), "train_accuracy": accuracy.item(), "lr": opt.param_groups[0]["lr"]})
             losses.append(loss.item())
-            wandb.log({"running train loss": sum(losses[max(0, len(losses)-tune_config.grad_accum_steps):])/len(losses[max(0, len(losses)-tune_config.grad_accum_steps):])})
+            # wandb.log({"running train loss": sum(losses[max(0, len(losses)-tune_config.grad_accum_steps):])/len(losses[max(0, len(losses)-tune_config.grad_accum_steps):])})
             accs.append(accuracy.item())
 
 
@@ -142,8 +142,9 @@ if __name__ == "__main__":
         batch_size=2,
         val_batch=1,
         grad_accum_steps=16,
+        max_steps=15000,
         weight_decay=0.001
     )
 
-
-    finetune("msamamba.pt", classification_config, tune_config)
+    
+    finetune("model.pt", classification_config, tune_config)
