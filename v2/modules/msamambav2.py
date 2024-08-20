@@ -84,7 +84,7 @@ class MSAMambaV2(nn.Module):
         
         self.d_model = d_model
         self.n_layers = n_layers
-        self.vocab_size = vocab_size
+        self.vocab_size = vocab_size + 1
         
         # attention hyperparams
         self.n_query = n_query
@@ -103,7 +103,7 @@ class MSAMambaV2(nn.Module):
         self.mlp_expand = mlp_expand
         self.act = act
         
-        self.embed = nn.Embedding(vocab_size, d_model)
+        self.embed = nn.Embedding(vocab_size+1, d_model)
         
         self.blocks = nn.ModuleList([
             MSAMambaV2Block(d_model, n_query, n_kv, n_channels, kernel_size, expand, d_conv, mlp_expand, act, d_attn, norm_eps, dropout_p)
@@ -185,6 +185,8 @@ class MSAMambaV2ForSequenceClassification(nn.Module):
         self.mamba = mamba
     
     def forward(self, x: Tensor) -> Tensor:
-        return self.classifier(self.mamba(x))
+        b, s = x.size()
+        x = torch.concat([torch.full((b), self.config.model_config.vocab_size), x], dim=-2)
+        return self.classifier(self.mamba(x)[:, 0])
         
 
