@@ -67,7 +67,7 @@ def finetune(model_path: str, model_config: MSAMambaV2ClassificationConfig, tune
             for ix, item in enumerate(target): target_t[ix, 0 if target[ix]==0 else 1] = item
 
             y = model(x.to(device))
-            loss = criterion(y[:, 0], target.to(device))
+            loss = criterion(y[:, 0], target_t.to(device))
             loss.backward()
             accuracy = torch.sum(target==torch.argmax(y, dim=-1))/tune_config.batch_size
 
