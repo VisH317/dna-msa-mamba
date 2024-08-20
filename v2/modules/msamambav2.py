@@ -116,7 +116,6 @@ class MSAMambaV2(nn.Module):
     def forward(self, x: Tensor, classification: bool = False) -> Tensor:
         x = self.embed(x)
         if classification:
-            print(x.size())
             x[0, 0, 0] = self.cls
         for block in self.blocks: x = block(x)
         
@@ -197,8 +196,7 @@ class MSAMambaV2ForSequenceClassification(nn.Module):
     def forward(self, x: Tensor) -> Tensor:
         device = torch.device("cuda" if torch.cuda.is_available else "cpu")
         b, m, s = x.size()
-        x = torch.concat([torch.full((b, m, 1), 4, device=device), x], dim=-1).to(device)
-        print(x.size())
+        x = torch.concat([torch.full((b, m, 1), 4, device=device), x[:, :, :s-1]], dim=-1).to(device)
         return self.classifier(self.mamba(x, classification=True)[:, 0])
         
 
