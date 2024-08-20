@@ -31,7 +31,7 @@ def finetune(model_path: str, model_config: MSAMambaV2ClassificationConfig, tune
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     wandb.login(key=WANDB_KEY)
-    wandb.init(project="msa-finetune-v2", config=asdict(tune_config).update(model_config.to_dict()))
+    wandb.init(project="msa-finetune-v2", config=asdict(tune_config).update(asdict(model_config)))
 
     print("setting up model...")
     model_dict = torch.load(model_path)
