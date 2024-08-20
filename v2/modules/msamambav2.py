@@ -111,7 +111,7 @@ class MSAMambaV2(nn.Module):
         ])
         
         self.cls = nn.Parameter(torch.rand(d_model))
-        nn.init.kaiming_uniform_(self.cls)
+        nn.init.normal_(self.cls)
         
     def forward(self, x: Tensor, classification: bool = False) -> Tensor:
         b, s = x.size()
