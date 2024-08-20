@@ -160,7 +160,7 @@ class MSAMambaV2ForSequenceClassification(nn.Module):
         super().__init__()
         
         self.config = config
-        self.mamba = MSAMambaV2.from_config(config)
+        self.mamba = MSAMambaV2.from_config(config.model_config)
         
         self.classifier = nn.Linear(config.model_config.d_model, config.n_classes)
         

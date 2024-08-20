@@ -36,7 +36,7 @@ def finetune(model_path: str, model_config: MSAMambaV2ClassificationConfig, tune
     print("setting up model...")
     model_dict = torch.load(model_path)
     model = MSAMambaV2ForSequenceClassification(model_config)
-    model.load_mamba(model_dict)
+    model.load_mamba_from_mlm(model_dict)
 
     model = model.to(device=device)
 
