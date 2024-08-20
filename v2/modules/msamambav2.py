@@ -103,7 +103,7 @@ class MSAMambaV2(nn.Module):
         self.mlp_expand = mlp_expand
         self.act = act
         
-        self.embed = nn.Embedding(vocab_size+1, d_model)
+        self.embed = nn.Embedding(vocab_size, d_model)
         
         self.blocks = nn.ModuleList([
             MSAMambaV2Block(d_model, n_query, n_kv, n_channels, kernel_size, expand, d_conv, mlp_expand, act, d_attn, norm_eps, dropout_p)
@@ -114,12 +114,10 @@ class MSAMambaV2(nn.Module):
         nn.init.normal_(self.cls)
         
     def forward(self, x: Tensor, classification: bool = False) -> Tensor:
-        b, s = x.size()
         x = self.embed(x)
         if classification:
-            cls_items = self.cls.unsqueeze(0).repeat(b, 1)
-            x = torch.concat([cls_items, x], dim=-2)
-        
+            print(x.size())
+            x[0, 0, 0] = self.cls
         for block in self.blocks: x = block(x)
         
         return x
@@ -183,7 +181,9 @@ class MSAMambaV2ForSequenceClassification(nn.Module):
     
     def load_mamba_from_mlm(self, mamba_dict) -> None:
         mambamlm = MSAMambaV2ForMLM(self.config.model_config)
-        mambamlm.load_state_dict(mamba_dict)
+        state = mambamlm.state_dict()
+        state.update(mamba_dict)
+        mambamlm.load_state_dict(state)
         self.mamba = mambamlm.model
         del mambamlm
     
@@ -195,6 +195,10 @@ class MSAMambaV2ForSequenceClassification(nn.Module):
         self.mamba = mamba
     
     def forward(self, x: Tensor) -> Tensor:
+        device = torch.device("cuda" if torch.cuda.is_available else "cpu")
+        b, m, s = x.size()
+        x = torch.concat([torch.full((b, m, 1), 4, device=device), x], dim=-1).to(device)
+        print(x.size())
         return self.classifier(self.mamba(x, classification=True)[:, 0])
         
 
