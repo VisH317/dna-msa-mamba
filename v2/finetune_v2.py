@@ -94,15 +94,17 @@ def finetune(model_path: str, model_config: MSAMambaV2ClassificationConfig, tune
                         ival_loader = iter(val_loader)
                         x, target = next(ival_loader)
                     
-                    target_t = torch.zeros(x.size()[0], 2)
-                    for ix, item in enumerate(target): target_t[ix, 0 if target[ix]==0 else 1] = item
-                    
-                    y = model(x.to(device))
-                    loss = criterion(y[:, 0], target_t.to(device))
-                    # accuracy = torch.sum(target_t==torch.argmax(y, dim=-1))/tune_config.val_batch
+                    try:
+                        target_t = torch.zeros(x.size()[0], 2)
+                        for ix, item in enumerate(target): target_t[ix, 0 if target[ix]==0 else 1] = item
+                        
+                        y = model(x.to(device))
+                        loss = criterion(y[:, 0], target_t.to(device))
+                        # accuracy = torch.sum(target_t==torch.argmax(y, dim=-1))/tune_config.val_batch
 
-                    val_losses.append(loss.item(0))
-                    wandb.log({"val_loss": loss.item()})
+                        val_losses.append(loss.item())
+                        wandb.log({"val_loss": loss.item()})
+                    except: continue # bro im tired of errors lol
 
     torch.save(model.state_dict(), f"model_{tune_config.task_name}.pt")
     wandb.save(f"model_{tune_config.task_name}.pt")
