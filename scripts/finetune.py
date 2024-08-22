@@ -74,7 +74,7 @@ def finetune(model_path: str, model_config: MSAMambaClassificationConfig, tune_c
             print(x.size(), target.size(), x.dtype)
 
             y = model(x)
-            loss = criterion(y[:, 0], target)
+            loss = criterion(torch.nn.functional.sigmoid(y[:, 0]), target)
             loss.backward()
             accuracy = torch.sum(target==torch.argmax(y, dim=-1))/tune_config.batch_size
 
