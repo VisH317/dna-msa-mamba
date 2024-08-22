@@ -63,11 +63,11 @@ def finetune(model_path: str, model_config: MSAMambaV2ClassificationConfig, tune
         for ix, data in tqdm(enumerate(train_loader), desc=f"Epoch {epoch+1}", total=min(tune_config.max_steps, dataset.train_steps)):
             x, target = data
             
-            target_t = torch.zeros(x.size()[0], 2)
+            target_t = torch.zeros(x.size()[0], 2, dtype=torch.float)
             for ix, item in enumerate(target): target_t[ix, 0 if target[ix]==0 else 1] = item
 
             y = model(x.to(device))
-            loss = criterion(y[:, 0], target_t.to(device))
+            loss = criterion(y, target_t.to(device))
             loss.backward()
             # accuracy = torch.sum(target_t==torch.argmax(y, dim=-1))/tune_config.batch_size
 
