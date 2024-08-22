@@ -6,6 +6,7 @@ import wandb
 from tqdm import tqdm
 from dataclasses import dataclass, asdict
 import pickle
+from torchmetrics import AUROC
 import os
 
 WANDB_KEY = "b2e79ea06ca3e1963c1b930a9944bce6938bbb59"    
@@ -24,31 +25,29 @@ def finetune(model_path: str, model_config: MSAMambaV2ClassificationConfig, data
     pytorch_total_params = sum(p.numel() for p in model.parameters())
     print("model setup complete, param count: ", pytorch_total_params)
     
-    BATCH = 4
+    BATCH = 1
 
     dataset = MSAGenome(data_path, batch_size=2, val_batch_size=BATCH, train_size=0.9)
-
-    losses = []
-    accs = []
-
-    criterion = nn.BCELoss()
     
-    loader = dataset.get_val_dataloader()
+    y_target = torch.empty(len(dataset.val_data))
+    
+    y_pred = torch.empty(len(dataset.val_data))
+        
+    auroc = AUROC("binary")
 
     with torch.no_grad():
-        for ix, data in tqdm(enumerate(loader), desc=f"Evaluation", total=min(len(dataset)//BATCH)):
+        for ix, data in tqdm(enumerate(dataset.val_data), desc=f"Evaluation", total=min(len(dataset)//BATCH)):
             x, target = data
             
             target_t = torch.zeros(x.size()[0], 2)
             for ix, item in enumerate(target): target_t[ix, 0 if target[ix]==0 else 1] = item
 
             y = model(x.to(device))
-            loss = criterion(y[:, 0], target_t.to(device))
-            losses.append(loss.item())
-            accuracy = torch.sum(torch.argmax(target_t, dim=-1)==torch.argmax(y, dim=-1))/tune_config.batch_size
-            accs.append(accuracy.item())
+            
+            y_pred[ix] = y[0]
+            y_target[ix] = target
         
-    return losses, accs
+    return auroc(y_pred, y_target)
 
 
 if __name__ == "__main__":
