@@ -1,5 +1,6 @@
 import torch
 from torch import nn
+import torch.nn.functional as F
 from modules.msamambav2 import MSAMambaV2Config, MSAMambaV2ClassificationConfig, MSAMambaV2ForSequenceClassification
 from data.genome import MSAGenome, collate_binary
 import wandb
@@ -67,7 +68,7 @@ def finetune(model_path: str, model_config: MSAMambaV2ClassificationConfig, tune
             for ix, item in enumerate(target): target_t[ix, 0 if target[ix]==0 else 1] = item
 
             y = model(x.to(device))
-            loss = criterion(y, target_t.to(device))
+            loss = criterion(F.sigmoid(y), target_t.to(device))
             loss.backward()
             # accuracy = torch.sum(target_t==torch.argmax(y, dim=-1))/tune_config.batch_size
 
@@ -99,7 +100,7 @@ def finetune(model_path: str, model_config: MSAMambaV2ClassificationConfig, tune
                         for ix, item in enumerate(target): target_t[ix, 0 if target[ix]==0 else 1] = item
                         
                         y = model(x.to(device))
-                        loss = criterion(y[:, 0], target_t.to(device))
+                        loss = criterion(F.sigmoid(y), target_t.to(device))
                         # accuracy = torch.sum(target_t==torch.argmax(y, dim=-1))/tune_config.val_batch
 
                         val_losses.append(loss.item())
