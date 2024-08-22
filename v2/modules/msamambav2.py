@@ -197,6 +197,6 @@ class MSAMambaV2ForSequenceClassification(nn.Module):
         device = torch.device("cuda" if torch.cuda.is_available else "cpu")
         b, m, s = x.size()
         x = torch.concat([torch.full((b, m, 1), 4, device=device), x[:, :, :s-1]], dim=-1).to(device)
-        return self.classifier(self.mamba(x, classification=True)[:, 0])
+        return self.classifier(self.mamba(x, classification=True)[:, 0, 0])
         
 
